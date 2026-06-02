@@ -1,0 +1,9 @@
+services:
+  moblin-relay:
+    build: .
+    container_name: moblin-relay
+    restart: unless-stopped
+    ports:
+      - "30005:8080"
+    environment:
+      - PORT=8080

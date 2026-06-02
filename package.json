@@ -1,0 +1,13 @@
+{
+  "name": "moblin-relay",
+  "version": "1.0.0",
+  "description": "Self-hosted Moblin remote-control relay (pairs a browser assistant with the Moblin streamer app). No Origin check, so browser-based controllers can connect from any domain.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node relay.mjs"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
