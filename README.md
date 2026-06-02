@@ -35,11 +35,11 @@ from any domain.
 docker compose up -d --build
 ```
 
-Published on host port **30005** (container listens on `:8080`). Verify:
+Published on host port **3005** (container listens on `:8080`). Verify:
 
 ```sh
-curl http://localhost:30005/         # -> moblin-relay ok
-curl http://localhost:30005/stats.json
+curl http://localhost:3005/         # -> moblin-relay ok
+curl http://localhost:3005/stats.json
 ```
 
 ## Run without Docker
@@ -55,9 +55,9 @@ The controller app runs over HTTPS, so it must reach the relay over **`wss://`**
 (secure WebSocket). Put the relay behind TLS. Two easy options:
 
 - **Cloudflare Tunnel** (`cloudflared`): point a hostname at
-  `http://localhost:30005`. Tunnel terminates TLS; `wss://your-host/...` just works.
+  `http://localhost:3005`. Tunnel terminates TLS; `wss://your-host/...` just works.
 - **Reverse proxy** (Caddy / Traefik / nginx): terminate TLS and proxy WebSocket
-  upgrades to `localhost:30005`.
+  upgrades to `localhost:3005`.
 
 Plain `ws://` only works for local/LAN testing where the controller is also
 served over `http://`.
