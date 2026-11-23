@@ -61,6 +61,15 @@ function handleControl(ws, bridgeId) {
   bridges.set(bridgeId, bridge);
 
   ws.on('message', (data, isBinary) => {
+    if (!isBinary) {
+      try {
+        const msg = JSON.parse(data.toString());
+        if (msg && msg.type === 'ping') {
+          safeSend(ws, JSON.stringify({ type: 'pong', t: Date.now() }), false);
+          return;
+        }
+      } catch { /* non-JSON control payload: forward as before */ }
+    }
     for (const s of bridge.statusSockets) safeSend(s, data, isBinary);
   });
   ws.on('close', () => {
@@ -116,7 +125,17 @@ function handleStatus(ws, bridgeId) {
   });
 }
 
-const wss = new WebSocketServer({ noServer: true });
+const wss = new WebSocketServer({
+  noServer: true,
+  // Compress JSON control/status frames for cellular clients. Small 2 KB window
+  // keeps per-connection memory low while compressing repeating Moblin status
+  // payloads (~5s ticks) by ~70-85%.
+  perMessageDeflate: {
+    threshold: 64,
+    serverMaxWindowBits: 11,
+    zlibDeflateOptions: { memLevel: 4 },
+  },
+});
 
 const server = http.createServer((req, res) => {
   if (req.url === '/stats.json') {
@@ -171,14 +190,15 @@ server.on('upgrade', (req, socket, head) => {
   });
 });
 
-// WS-level keepalive so reverse proxies / tunnels don't drop idle bridges.
+// WS-level keepalive so reverse proxies / tunnels don't drop idle bridges
+// and half-open cellular sockets are reaped within 15-30s instead of 60s.
 const heartbeat = setInterval(() => {
   for (const ws of wss.clients) {
     if (ws.isAlive === false) { ws.terminate(); continue; }
     ws.isAlive = false;
     try { ws.ping(); } catch { /* ignore */ }
   }
-}, 30000);
+}, 15000);
 wss.on('close', () => clearInterval(heartbeat));
 
 server.listen(PORT, () => {
